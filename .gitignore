@@ -1,0 +1,7 @@
+echo "venv/" > .gitignore
+echo "__pycache__/" >> .gitignore
+echo "*.log" >> .gitignore
+echo "*.zip" >> .gitignore
+echo "fine_tuned_sentiment_model/" >> .gitignore
+echo "results/" >> .gitignore
+echo "logs/" >> .gitignore

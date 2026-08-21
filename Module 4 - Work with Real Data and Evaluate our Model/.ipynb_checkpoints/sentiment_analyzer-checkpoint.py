@@ -10,7 +10,7 @@ classifier = pipeline("sentiment-analysis",
 
 # Load IMDB dataset (we'll use a small subset for speed)
 print("Loading dataset...")
-dataset = load_dataset("stanfordnlp/imdb", split="test")  # First 1000 test examples
+dataset = load_dataset("imdb", split="test")  # First 1000 test examples
 dataset  = dataset.shuffle (seed=42)
 
 # Function to predict on batch

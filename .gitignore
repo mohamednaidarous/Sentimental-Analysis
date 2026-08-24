@@ -1,7 +1,10 @@
-echo "venv/" > .gitignore
-echo "__pycache__/" >> .gitignore
-echo "*.log" >> .gitignore
-echo "*.zip" >> .gitignore
-echo "fine_tuned_sentiment_model/" >> .gitignore
-echo "results/" >> .gitignore
-echo "logs/" >> .gitignorevenv/  echo __pycache__/  echo *.pyc  echo .ipynb_checkpoints/ 
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+fine_tuned_model/
+fine_tuned_sentiment_model/
+results/
+logs/
+*.safetensors
+*.bin

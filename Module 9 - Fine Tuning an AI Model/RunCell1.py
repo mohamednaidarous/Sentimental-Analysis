@@ -1,4 +1,3 @@
-!pip install transformers datasets accelerate -q
-
-print("\n✅ Libraries installed successfully!")
-
+import subprocess
+subprocess.run(["pip", "install", "transformers", "datasets", "accelerate", "-q"])
+print("Libraries installed successfully!")

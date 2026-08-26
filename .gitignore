@@ -1,6 +1,7 @@
 venv/
 __pycache__/
 *.pyc
+*.log
 .ipynb_checkpoints/
 fine_tuned_model/
 fine_tuned_sentiment_model/

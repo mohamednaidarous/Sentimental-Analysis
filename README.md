@@ -1,132 +1,102 @@
-# Movie Review Sentiment Analysis with DistilBERT
+# Sentiment Analysis — final-code
 
----
+Consolidated, production-facing code for the Movie Review Sentiment Analysis
+project. Everything — inference, evaluation, and fine-tuning, in both a web
+UI and a command-line tool — lives in a single file: **`app.py`**.
 
-An AI-powered sentiment analysis tool that classifies movie reviews as positive or negative. This project uses DistilBERT as a base model, fine-tuned on custom data to understand modern slang and contemporary language patterns.
+## What's in this folder
 
-## Features
+| File | Purpose |
+|---|---|
+| `app.py` | **The main deliverable.** All-in-one script: Streamlit web app (Analyze / Evaluate / Fine-Tune / About tabs) plus four CLI modes. See below. |
+| `sentiment_analyzer.py` | Standalone CLI, base model only. Superseded by `app.py --cli-analyze`; kept for reference. |
+| `evaluate_model.py` | Standalone evaluation script. Superseded by `app.py --cli-evaluate`; kept for reference. |
+| `train_model.py` | Standalone fine-tuning script. Superseded by `app.py --cli-train`; kept for reference. |
+| `sentiment_analyzer_finetuned.py` | Standalone CLI, fine-tuned model only. Superseded by `app.py --cli-analyze-finetuned`; kept for reference. |
 
----
+## Setup
 
-- **Pre-trained DistilBERT Model:** Leverages the power of transformer-based language models
-- **Fine-tuned for Modern Language:** Custom training on movie reviews including modern slang and colloquialisms
-- **Confidence Scoring:** Provides probability scores for prediction confidence
-- **Dual Interface:** Available as both CLI and web-based Streamlit application
-- **Comprehensive Evaluation:** Includes accuracy metrics, classification reports, and confusion matrix visualizations
-
-## Project Structure
-
----
-
-- Module 3 - Load Pretrained model/
-- Module 4 - Work with Real Data and Evaluate our Model/
-- Module 5 - Interactive Testing an AI Model/
-- Module 6 - Build an AI Web Application/
-- Module 7 - Discuss Other Considerations for AI Development/
-- Module 8 - Create a Visualisation to Evaluate our Model/
-  - RunCell1.py ... RunCell11.py (evaluation & confusion matrix steps)
-  - confusion_matrix.png (saved output)
-- Module 9 - Fine Tuning an AI Model/
-  - RunCell1.py ... RunCell9.py (fine-tuning pipeline)
-  - sentiment_analyzer_finetuned.py (interactive CLI using the fine-tuned model)
-- final-code/ (consolidated Streamlit app)
-- requirements.txt (pinned dependency versions)
-- README.md (this file)
-
-Each `Module X` folder corresponds to a stage of the course, originally written as Jupyter notebook cells (`RunCell1.py`, `RunCell2.py`, etc.). Run them in numerical order within a folder — later cells in the same module depend on variables created by earlier ones. The `final-code/` folder contains the consolidated, production-facing version of the app.**
----
-
-
-Each `Module X` folder corresponds to a stage of the course, originally written as Jupyter notebook cells (`RunCell1.py`, `RunCell2.py`, etc.). Run them in numerical order within a folder — later cells in the same module depend on variables created by earlier ones. The `final-code/` folder contains the consolidated, production-facing version of the app.
-
-## Installation
-
----
-
-1. **Clone the repository**
 ```bash
-git clone https://github.com/mohamednaidarous/Sentimental-Analysis.git
-cd Sentimental-Analysis
+pip install -r ../requirements.txt
 ```
 
-2. **Create a virtual environment**
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-source venv/bin/activate     # Mac/Linux
-```
-
-3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
+(Run from this folder; `requirements.txt` lives in the project root.)
 
 ## Usage
 
----
+### Web app (recommended)
 
-### Command-line Interface
 ```bash
-python sentiment_model.py
+streamlit run app.py
 ```
 
-### Streamlit Web Application
+Opens at `http://localhost:8501` with four tabs:
+
+- **Analyze** — enter a review, get sentiment + confidence. Choose base or
+  fine-tuned model (fine-tuned option appears automatically once one exists).
+- **Evaluate** — downloads a sample of the IMDB test set, runs the model
+  over it, and shows accuracy, a full classification report, and a
+  confusion matrix heatmap — all inline in the browser.
+- **Fine-Tune** — upload a CSV (`text`, `label` columns) and fine-tune the
+  base model on your own data, right from the browser. Saves to
+  `./fine_tuned_model` and immediately makes it available in the other tabs.
+- **About** — model info and current fine-tuned-model status.
+
+> Evaluate and Fine-Tune do real work (downloading data, running inference
+> over hundreds of reviews, training a transformer) and can take anywhere
+> from under a minute to several minutes. Keep the browser tab open while
+> they run.
+
+### Command line
+
+The same file also works as a CLI, for each individual module's original
+behaviour:
+
 ```bash
-streamlit run sentiment_app.py
+python app.py --cli-analyze                          # base model, interactive
+python app.py --cli-analyze-finetuned                 # fine-tuned model, interactive
+python app.py --cli-evaluate                          # evaluate on 1000 IMDB reviews, saves confusion_matrix.png
+python app.py --cli-evaluate --num-reviews 2000        # evaluate on a custom number of reviews
+python app.py --cli-evaluate --use-fine-tuned          # evaluate the fine-tuned model instead
+python app.py --cli-train                              # fine-tune on slang_reviews.csv (3 epochs)
+python app.py --cli-train --epochs 5                   # fine-tune for a custom number of epochs
 ```
 
-### Running Module Scripts
-Navigate into a module folder and run cells in order:
-```bash
-cd "Module 8 - Create a Visualisation to Evaluate our Model"
-python RunCell1.py
-python RunCell2.py
-# ...continue in numerical order
-```
+Running `python app.py` with no flags falls through to the same behaviour
+as `streamlit run app.py`.
 
-## Handling Long Reviews
+## Fine-tuning data
 
----
+To fine-tune (via either the web app's Fine-Tune tab or `--cli-train`), you
+need a CSV with two columns:
 
-DistilBERT has a 512-token limit. For longer reviews, the following strategies are recommended:
-
-**Sliding Window Approach**
-- Process the review in overlapping chunks of 512 tokens
-- Aggregate predictions from each chunk (voting or averaging confidence scores)
-- Provides more comprehensive sentiment analysis for long reviews
-
-**Alternative Model Architectures**
-
-| Model | Benefit |
+| text | label |
 |---|---|
-| Longformer | Supports up to 4,096 tokens |
-| BigBird | Efficient attention for longer sequences |
-| Hierarchical models | Process paragraph-level sentiments then aggregate |
+| "This movie slapped, no cap." | 1 |
+| "Total snoozefest, skip it." | 0 |
 
-**Smart Truncation Strategies**
-- Keep first and last N tokens (capture introduction and conclusion)
-- Attention-based selection of most relevant sentences
-- Summary-based preprocessing before classification
+`label`: `0` = Negative, `1` = Positive. For the CLI, this file must be
+named `slang_reviews.csv` and placed in this folder.
 
-## Model Evaluation Results
+## Model paths
 
----
-
-Baseline model (pre-trained, not fine-tuned) evaluated on 1,000 IMDB reviews:
-
-| Metric | Value |
-|---|---|
-| Accuracy | 88.10% |
-| Precision (Negative) | 0.87 |
-| Recall (Negative) | 0.90 |
-| Precision (Positive) | 0.89 |
-| Recall (Positive) | 0.86 |
-
-See `Module 8 - Create a Visualisation to Evaluate our Model/confusion_matrix.png` for the full confusion matrix.
+- Base model: `distilbert-base-uncased-finetuned-sst-2-english` (downloaded
+  from Hugging Face on first use, then cached locally).
+- Fine-tuned model: saved to `./fine_tuned_model` after training. This
+  folder is excluded from git (see `.gitignore`) since model weights are
+  large and reproducible by re-running training.
 
 ## Troubleshooting
 
----
+**Wall of `ModuleNotFoundError: No module named 'torchvision'` when running
+`streamlit run app.py`**
+Harmless. Streamlit's file-watcher scans every installed `transformers`
+submodule (including unrelated vision models) to support auto-reload; many
+of those need `torchvision`, which this project doesn't use or require.
+The app still runs correctly — check `http://localhost:8501` in your
+browser. To silence the noise, run with
+`streamlit run app.py --server.fileWatcherType none` (you'll need to
+restart manually after editing the file).
 
 **`ImportError: cannot import name 'is_offline_mode' from 'huggingface_hub'`**
 Version mismatch between `transformers` and `huggingface_hub`. Fix with:
@@ -134,58 +104,22 @@ Version mismatch between `transformers` and `huggingface_hub`. Fix with:
 pip install --upgrade --force-reinstall transformers huggingface_hub
 ```
 
-**`NameError: name 'dataset' is not defined` (or similar for `classifier`, `df`, etc.)**
-The `RunCellX.py` files were originally Jupyter notebook cells sharing one session. Running them as separate scripts means each one needs its own setup code (imports, model/dataset loading) repeated at the top.
+**`ModuleNotFoundError: No module named 'datasets'` (or `transformers`,
+etc.)**
+You're not in the right conda environment. Run:
+```bash
+conda activate sentiment-analysis
+```
+(Check your prompt shows `(sentiment-analysis)`, not `(base)`.)
 
-**`TypeError: TrainingArguments.__init__() got an unexpected keyword argument 'logging_dir'`**
-Argument names can shift between `transformers` versions. Remove `logging_dir` from `TrainingArguments` if your installed version doesn't support it — it isn't essential.
+**Fine-tuned model won't load: `HFValidationError: Repo id must use
+alphanumeric chars...`**
+The path doesn't match where training actually saved the model. `app.py`
+consistently uses `./fine_tuned_model` everywhere — if you're pointing at
+a different folder name, correct it.
 
-**Where do I get `slang_reviews.csv`?**
-This custom dataset is used in Module 9 for fine-tuning on slang/informal movie review language. It should be provided as part of the course materials — place it in the `Module 9 - Fine Tuning an AI Model/` folder before running the training scripts.
-
-**Model won't load: `HFValidationError: Repo id must use alphanumeric chars...`**
-Check that the `MODEL_PATH` in your script points to the exact folder name your training script saved to (e.g. `./fine_tuned_model`), not a different name.
-
-## Future Improvements
-
----
-
-- Implement sliding window approach for long reviews
-- Add neutral sentiment classification
-- Support for multi-language reviews
-- Aspect-based sentiment analysis (acting, plot, cinematography)
-- API endpoint for integration with other applications
-- Mobile-responsive design improvements
-- Evaluate alternative models (Longformer, BigBird) for longer text support
-
-## License
-
----
-
-MIT License — feel free to use, modify, and distribute this project with attribution.
-
-## Model Information
-
----
-
-| Property | Value |
-|---|---|
-| Base Model | distilbert-base-uncased-finetuned-sst-2-english |
-| Task | Binary Sentiment Classification |
-| Labels | POSITIVE / NEGATIVE |
-| Max Token Length | 512 |
-| Framework | Hugging Face Transformers |
-
-## Contributing
-
----
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## Acknowledgements
-
----
-
-- [Hugging Face](https://huggingface.co) for the Transformers library and pre-trained models
-- [Streamlit](https://streamlit.io) for the web application framework
-- [IT Online Learning](https://itonlinelearning.com) for project development and training materials
+**`TypeError: TrainingArguments.__init__() got an unexpected keyword
+argument 'logging_dir'`**
+Older/newer `transformers` versions vary on this argument. `app.py`
+already omits it; if you see this in one of the standalone reference
+scripts, remove the `logging_dir` line from `TrainingArguments`.
